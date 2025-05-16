@@ -1,0 +1,103 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --primary: 221 90% 45%;
+    --primary-light: 221 90% 55%;
+    --primary-dark: 221 90% 35%;
+    --secondary: 39 100% 50%;
+    --accent: 16 100% 50%;
+    --success: 142 76% 45%;
+    --warning: 38 92% 50%;
+    --error: 0 91% 58%;
+    --background: 0 0% 100%;
+    --foreground: 222 47% 11%;
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+  }
+
+  html {
+    @apply antialiased;
+  }
+
+  body {
+    @apply bg-gray-50 text-gray-900 min-h-screen;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}
+
+@layer components {
+  .card {
+    @apply bg-white rounded-lg shadow-sm border border-gray-100 p-6 transition-all;
+  }
+  
+  .btn-primary {
+    @apply bg-primary text-white px-4 py-2 rounded-md hover:bg-primary-dark transition-colors;
+  }
+  
+  .btn-secondary {
+    @apply bg-white text-primary border border-primary px-4 py-2 rounded-md hover:bg-gray-50 transition-colors;
+  }
+  
+  .input-field {
+    @apply w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary;
+  }
+  
+  .table-container {
+    @apply w-full overflow-x-auto rounded-lg border border-gray-200 shadow-sm;
+  }
+  
+  .data-table {
+    @apply min-w-full divide-y divide-gray-200;
+  }
+  
+  .data-table th {
+    @apply bg-gray-50 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider;
+  }
+  
+  .data-table td {
+    @apply px-6 py-4 whitespace-nowrap text-sm text-gray-900;
+  }
+  
+  .data-table tr {
+    @apply bg-white even:bg-gray-50;
+  }
+  
+  .data-table tr:hover {
+    @apply bg-blue-50;
+  }
+  
+  .badge {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+  }
+  
+  .badge-blue {
+    @apply bg-blue-100 text-blue-800;
+  }
+  
+  .badge-green {
+    @apply bg-green-100 text-green-800;
+  }
+  
+  .badge-yellow {
+    @apply bg-yellow-100 text-yellow-800;
+  }
+  
+  .badge-red {
+    @apply bg-red-100 text-red-800;
+  }
+  
+  .badge-purple {
+    @apply bg-purple-100 text-purple-800;
+  }
+  
+  .nav-link {
+    @apply flex items-center gap-3 px-3 py-2 rounded-md text-gray-600 hover:bg-primary/10 hover:text-primary transition-all;
+  }
+  
+  .nav-link-active {
+    @apply bg-primary/10 text-primary font-medium;
+  }
+}
