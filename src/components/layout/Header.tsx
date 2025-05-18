@@ -13,7 +13,7 @@ const Header: React.FC<HeaderProps> = ({ openSidebar }) => {
     <header className="sticky top-0 z-10 flex h-16 flex-shrink-0 bg-white shadow-sm">
       <button
         type="button"
-        className="border-r border-gray-200 px-4 text-gray-500 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary md:hidden"
+        className="px-4 text-gray-500 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary lg:hidden"
         onClick={openSidebar}
       >
         <span className="sr-only">Open sidebar</span>
@@ -28,37 +28,33 @@ const Header: React.FC<HeaderProps> = ({ openSidebar }) => {
                 <Search className="h-5 w-5 text-gray-400" />
               </div>
               <input
-                id="search-field"
-                className="block h-full w-full border-transparent py-2 pl-10 pr-3 text-gray-900 placeholder-gray-500 focus:border-transparent focus:placeholder-gray-400 focus:outline-none focus:ring-0 sm:text-sm"
-                placeholder="Search students, fees, courses..."
                 type="search"
+                placeholder="Search..."
+                className="block h-full w-full rounded-md border border-gray-200 bg-gray-50 py-2 pl-10 pr-3 text-sm placeholder-gray-500 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
               />
             </div>
           </div>
         </div>
         
-        <div className="ml-4 flex items-center md:ml-6">
-          <button className="rounded-full bg-white p-1 text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2">
-            <span className="sr-only">View notifications</span>
+        <div className="ml-4 flex items-center space-x-4">
+          <button className="rounded-full p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-500">
             <Bell className="h-6 w-6" />
           </button>
 
-          <button className="ml-3 rounded-full bg-white p-1 text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2">
-            <span className="sr-only">Settings</span>
+          <button className="rounded-full p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-500">
             <Settings className="h-6 w-6" />
           </button>
 
-          {/* User profile dropdown */}
-          <div className="relative ml-3">
-            <div>
-              <button className="flex max-w-xs items-center rounded-full bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2">
-                <span className="sr-only">Open user menu</span>
-                <div className="h-8 w-8 rounded-full bg-primary text-white flex items-center justify-center">
-                  {user?.name?.charAt(0) || 'A'}
-                </div>
-                <span className="ml-2 hidden md:block font-medium text-gray-700">{user?.name || 'Admin'}</span>
-              </button>
-            </div>
+          <div className="relative">
+            <button className="flex items-center rounded-full bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2">
+              <span className="sr-only">Open user menu</span>
+              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-white">
+                {user?.name?.charAt(0) || 'A'}
+              </div>
+              <span className="ml-2 hidden text-sm font-medium text-gray-700 lg:block">
+                {user?.name || 'Admin'}
+              </span>
+            </button>
           </div>
         </div>
       </div>
