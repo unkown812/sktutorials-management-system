@@ -1,1 +1,0 @@
-sktutorials-class
