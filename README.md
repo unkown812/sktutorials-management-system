@@ -1,8 +1,6 @@
-# Project Title
+# Student Management System 
+## ©️ SK Tutorials. All rights reserved.
 
-Student Management System 
-# Description
-©️ SK Tutorials. All rights reserved.
 
 <!-- ## Table of Contents
 
