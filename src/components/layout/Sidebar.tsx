@@ -13,7 +13,7 @@ import {
   X
 } from 'lucide-react';
 import { useUser } from '../../context/UserContext';
-import './layout.css';
+import './Layout.css';
 
 interface SidebarProps {
   onClose?: () => void;
