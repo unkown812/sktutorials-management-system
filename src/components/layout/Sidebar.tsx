@@ -26,7 +26,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
     <div className="flex h-full flex-col bg-grey-500 backdrop-blur-sm">
       <div className="flex h-16 items-center justify-between px-4 lg:justify-center">
         <div className="flex items-center">
-          <img src="/src/assets/Sk logo.png" alt="" class="size-20 mt-4"/>
+          <img src="/src/assets/logo.png" alt="" class="size-20 mt-4"/>
           <h1 className="ml-2 text-xl font-bold text-gray-900 font-quicksand" >SK Tutorials</h1>
         </div>
         <button
