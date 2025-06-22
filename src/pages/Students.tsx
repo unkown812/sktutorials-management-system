@@ -17,22 +17,24 @@ interface Student {
   category: string;
   course: string;
   year: number | null;
+  semester: number | null;
   email: string;
   phone: string;
   enrollment_date: string;
   fee_status: string;
-  total_fee: number | null; 
-  paid_fee: number | null;  
+  total_fee: number | null;
+  paid_fee: number | null;
   due_amount: number | null;
-  due_date: number | null;
   birthday: string;
   installment_amt: number | null;
   installments: number | null;
+  installment_dates?: string[]; // Added installment_dates as optional string array
+  enrollment_year: number[];
+  subjects_enrolled: string[];
 }
 
 const Students: React.FC = () => {
   const navigate = useNavigate();
-
   const [students, setStudents] = useState<Student[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -52,6 +54,7 @@ const Students: React.FC = () => {
     category: '',
     course: '',
     year: null,
+    semester: null,
     email: '',
     phone: '',
     enrollment_date: new Date().toISOString().split('T')[0],
@@ -59,11 +62,17 @@ const Students: React.FC = () => {
     total_fee: null,
     paid_fee: null,
     due_amount: null,
-    due_date: null,
     birthday: '',
     installment_amt: null,
     installments: null,
+    installment_dates: [], // initialize as empty array
+    enrollment_year: [],
+    subjects_enrolled: [],
   });
+
+  // Additional state for enrollment year start and end inputs
+  const [enrollmentYearStart, setEnrollmentYearStart] = useState<number | ''>('');
+  const [enrollmentYearEnd, setEnrollmentYearEnd] = useState<number | ''>('');
   const [adding, setAdding] = useState(false);
   const [addError, setAddError] = useState<string | null>(null);
   const [feeAmount, setFeeAmount] = useState<number | null>(null);
@@ -97,6 +106,7 @@ const Students: React.FC = () => {
       'Due Date',
       'Installment Amount',
       'Installments',
+      'Enrollment Year',
       'Birthday'
     ];
 
@@ -114,7 +124,6 @@ const Students: React.FC = () => {
           student.fee_status,
           student.total_fee,
           student.due_amount,
-          student.due_date,
           student.paid_fee,
           (student.total_fee || 0) - (student.paid_fee || 0),
         ];
@@ -161,15 +170,18 @@ const Students: React.FC = () => {
     'Diploma',
     'Entrance Exams'
   ];
+
   const schoolCourses = [
     'SSC',
     'CBSE',
     'ICSE',
     'Others',
   ];
+
   const juniorCollegeCourses = ['Science', 'Commerce', 'Arts'];
-  const diplomaCourses = ['Computer Science', 'Mechanical', 'Electrical', 'Civil'];
+  const diplomaCourses = ['Computer Science', 'Mechanical', 'Electrical', 'Civil', 'Other'];
   const entranceExamCourses = ['NEET', 'JEE', 'MHTCET', 'Boards'];
+  // Removed unused variable juniorCollegeSubjects to fix eslint warning
 
   useEffect(() => {
     switch (selectedCategory) {
@@ -217,9 +229,10 @@ const Students: React.FC = () => {
     setShowAddModal(true);
     setNewStudent({
       name: '',
-      category: 'School',
+      category: '',
       course: '',
       year: 0,
+      semester: null,
       email: '',
       phone: '',
       enrollment_date: new Date().toISOString().split('T')[0],
@@ -227,10 +240,11 @@ const Students: React.FC = () => {
       total_fee: null,
       paid_fee: null,
       due_amount: null,
-      due_date: null,
       installment_amt: null,
       installments: null,
       birthday: new Date().toISOString().split('T')[0],
+      enrollment_year: [],
+      subjects_enrolled: [],
     });
     setAddError(null);
     setStudentCourses(schoolCourses);
@@ -241,7 +255,7 @@ const Students: React.FC = () => {
 
     if (name === 'total_fee') {
       const totalFeeNum = Number(value);
-      let installmentsNum = newStudent.installments;
+      let installmentsNum = newStudent.installments ?? 1;
       if (installmentsNum < 1) installmentsNum = 1;
       if (installmentsNum > 24) installmentsNum = 24;
       const installmentAmt = installmentsNum > 0 ? totalFeeNum / installmentsNum : 0;
@@ -254,16 +268,30 @@ const Students: React.FC = () => {
       let installmentsNum = Number(value);
       if (installmentsNum < 1) installmentsNum = 1;
       if (installmentsNum > 24) installmentsNum = 24;
-      const installmentAmt = installmentsNum > 0 ? (newStudent.total_fee || 0) / installmentsNum : 0;
+      const installmentAmt = installmentsNum > 0 ? (newStudent.total_fee || 0) / installmentsNum : 0
+      let newInstallmentDates = newStudent.installment_dates ? [...newStudent.installment_dates] : [];
+      if (newInstallmentDates.length > installmentsNum) {
+        newInstallmentDates = newInstallmentDates.slice(0, installmentsNum);
+      } else {
+        while (newInstallmentDates.length < installmentsNum) {
+          newInstallmentDates.push('');
+        }
+      }
       setNewStudent((prev) => ({
         ...prev,
         installments: installmentsNum,
         installment_amt: installmentAmt,
+        installment_dates: newInstallmentDates,
       }));
     } else if (name === 'year') {
       setNewStudent((prev) => ({
         ...prev,
         year: Number(value),
+      }));
+    } else if (name === 'semester') {
+      setNewStudent((prev) => ({
+        ...prev,
+        semester: Number(value),
       }));
     } else if (name === 'due_date') {
       setNewStudent((prev) => ({
@@ -278,6 +306,17 @@ const Students: React.FC = () => {
     }
   };
 
+  // New handlers for enrollment year start and end inputs
+  const handleEnrollmentYearStartChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value === '' ? '' : Number(e.target.value);
+    setEnrollmentYearStart(val);
+  };
+
+  const handleEnrollmentYearEndChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value === '' ? '' : Number(e.target.value);
+    setEnrollmentYearEnd(val);
+  };
+
   const handleAddStudentSubmit = async () => {
     setAdding(true);
     setAddError(null);
@@ -286,6 +325,33 @@ const Students: React.FC = () => {
         setAddError('Please fill in all required fields.');
         setAdding(false);
         return;
+      }
+
+      // Validate enrollment year inputs
+      if (enrollmentYearStart === '' || enrollmentYearEnd === '') {
+        setAddError('Please enter both enrollment start and end years.');
+        setAdding(false);
+        return;
+      }
+      if (typeof enrollmentYearStart === 'number' && typeof enrollmentYearEnd === 'number' && enrollmentYearStart > enrollmentYearEnd) {
+        setAddError('Enrollment start year cannot be greater than end year.');
+        setAdding(false);
+        return;
+      }
+
+      // Validate installment_dates length matches installments count
+      if (!newStudent.installment_dates || newStudent.installment_dates.length !== (newStudent.installments || 0)) {
+        setAddError('Please enter due dates for all installments.');
+        setAdding(false);
+        return;
+      }
+      // Validate all installment_dates are non-empty and valid dates
+      for (const dateStr of newStudent.installment_dates) {
+        if (!dateStr || isNaN(Date.parse(dateStr))) {
+          setAddError('Please enter valid due dates for all installments.');
+          setAdding(false);
+          return;
+        }
       }
 
       const totalFeeNum = Number(newStudent.total_fee);
@@ -299,6 +365,9 @@ const Students: React.FC = () => {
         installments: installmentsNum,
         installment_amt: installmentAmtNum,
         due_amount: dueAmountNum,
+        enrollment_year: [enrollmentYearStart, enrollmentYearEnd],
+        installment_dates: newStudent.installment_dates,
+        semester: newStudent.semester,
       };
 
       const { error } = await supabase.from('students').insert([studentToInsert]);
@@ -585,18 +654,18 @@ const Students: React.FC = () => {
                             </button>
                           </td>
                         </tr>
-                      );
-                    });
-                  });
-                });
-              });
+                      )
+                    })
+                  })
+                })
+              })
               return rows;
             })()}
           </tbody>
         </table>
       </div>
 
-      {/* Pagination Placeholder */}
+
       <div className="flex flex-col md:flex-row items-center justify-between text-sm text-gray-700 space-y-2 md:space-y-0">
         <div>
           Showing {' '}
@@ -604,204 +673,262 @@ const Students: React.FC = () => {
         </div>
       </div>
 
-      {/* Add Student Modal */}
-      {showAddModal && (
-        <div className="fixed inset-0 scrollbar-hide bg-black bg-opacity-50 flex items-center justify-center z-50 overflow-auto p-4">
-          <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-semibold">Add New Student</h2>
-              <button
-                className="text-gray-500 hover:text-gray-700"
-                onClick={() => setShowAddModal(false)}
-                aria-label="Close modal"
-              >
-                <XCircle className="h-6 w-6" />
-              </button>
-            </div>
-            {addError && <div className="mb-4 text-red-600 font-medium">{addError}</div>}
-            <div className="space-y-4">
-              <div>
-                <label htmlFor="name" className="block text-sm font-medium text-gray-700">Name</label>
-                <input
-                  type="text"
-                  name="name"
-                  id="name"
-                  value={newStudent.name}
-                  onChange={handleInputChange}
-                  className="input-field mt-1"
-                  required
-                />
-              </div>
-              <div>
-                <label htmlFor="category" className="block text-sm font-medium text-gray-700">Category</label>
-                <select
-                  name="category"
-                  id="category"
-                  value={newStudent.category}
-                  onChange={(e) => {
-                    handleInputChange(e);
-                    setNewStudent(prev => ({ ...prev, course: '' }));
-                    setSelectedCategory(e.target.value);
-                  }}
-                  className="input-field mt-1"
+
+      {showAddModal &&
+        (
+          <div className="fixed inset-0 scrollbar-hide bg-black bg-opacity-50 flex items-center justify-center z-50 overflow-auto p-4">
+            <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-semibold">Add New Student</h2>
+                <button
+                  className="text-gray-500 hover:text-gray-700"
+                  onClick={() => setShowAddModal(false)}
+                  aria-label="Close modal"
                 >
-                  {studentCategories.map((category) => (
-                    <option key={category} value={category}>{category}</option>
-                  ))}
-                </select>
+                  <XCircle className="h-6 w-6" />
+                </button>
               </div>
-              <div>
-                <label htmlFor="course" className="block text-sm font-medium text-gray-700">Course</label>
-                <select
-                  name="course"
-                  id="course"
-                  value={newStudent.course}
-                  onChange={handleInputChange}
-                  className="input-field mt-1"
-                  required
-                  disabled={studentCourses.length === 0}
-                >
-                  <option value="" disabled>Select course</option>
-                  {studentCourses.map((course) => (
-                    <option key={course} value={course}>{course}</option>
-                  ))}
-                </select>
+              {addError && <div className="mb-4 text-red-600 font-medium">{addError}</div>}
+              <div className="space-y-4">
+                <div>
+                  <label htmlFor="name" className="block text-sm font-medium text-gray-700">Name</label>
+                  <input
+                    type="text"
+                    name="name"
+                    id="name"
+                    value={newStudent.name}
+                    onChange={handleInputChange}
+                    className="input-field mt-1"
+                    required
+                  />
+                </div>
+                <div>
+                  <label htmlFor="category" className="block text-sm font-medium text-gray-700">Category</label>
+                  <select
+                    name="category"
+                    id="category"
+                    value={newStudent.category}
+                    onChange={(e) => {
+                      handleInputChange(e);
+                      setNewStudent(prev => ({ ...prev, course: '' }));
+                      setSelectedCategory(e.target.value);
+                    }}
+                    className="input-field mt-1"
+                  >
+                    {studentCategories.map((category) => (
+                      <option key={category} value={category}>{category}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label htmlFor="course" className="block text-sm font-medium text-gray-700">Course</label>
+                  <select
+                    name="course"
+                    id="course"
+                    value={newStudent.course}
+                    onChange={handleInputChange}
+                    className="input-field mt-1"
+                    required
+                    disabled={studentCourses.length === 0}
+                  >
+                    <option value="" disabled>Select course</option>
+                    {studentCourses.map((course) => (
+                      <option key={course} value={course}>{course}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label htmlFor="year" className="block text-sm font-medium text-gray-700">Year</label>
+                  <input
+                    name="year"
+                    id="year"
+                    value={newStudent.year}
+                    onChange={handleInputChange}
+                    className="input-field mt-1"
+                    min={1}
+                    max={10}
+                    required
+                  />
+                </div>
+                <div>
+                  <label htmlFor="semester" className="block text-sm font-medium text-gray-700">Semester</label>
+                  <input
+                    type="number"
+                    name="semester"
+                    id="semester"
+                    value={newStudent.semester ?? ''}
+                    onChange={handleInputChange}
+                    className="input-field mt-1"
+                    min={1}
+                    max={10}
+                  />
+                </div>
+                <div>
+                  <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email</label>
+                  <input
+                    type="email"
+                    name="email"
+                    id="email"
+                    value={newStudent.email}
+                    onChange={handleInputChange}
+                    className="input-field mt-1"
+                    required
+                  />
+                </div>
+                <div>
+                  <label htmlFor="phone" className="block text-sm font-medium text-gray-700">Phone</label>
+                  <input
+                    type="tel"
+                    name="phone"
+                    id="phone"
+                    value={newStudent.phone}
+                    onChange={handleInputChange}
+                    className="input-field mt-1"
+                    required
+                  />
+                </div>
+                <div>
+                  <label htmlFor="enrollment_date" className="block text-sm font-medium text-gray-700">Enrollment Date</label>
+                  <input
+                    type="date"
+                    name="enrollment_date"
+                    id="enrollment_date"
+                    value={newStudent.enrollment_date}
+                    onChange={handleInputChange}
+                    className="input-field mt-1"
+                    required
+                  />
+                </div>
+                <div>
+                  <label htmlFor="total_fee" className="block text-sm font-medium text-gray-700">Total Fee (₹)</label>
+                  <input
+
+                    name="total_fee"
+                    id="total_fee"
+                    value={typeof newStudent.total_fee === 'number' ? newStudent.total_fee : Number(newStudent.total_fee)}
+                    onChange={handleInputChange}
+                    className="input-field mt-1"
+                    min={0}
+                  />
+                </div>
+                <div>
+                  <label htmlFor="installments" className="block text-sm font-medium text-gray-700">Installments (1-24)</label>
+                  <input
+                    type="number"
+                    name="installments"
+                    id="installments"
+                    value={typeof newStudent.installments === 'number' ? newStudent.installments : Number(newStudent.installments)}
+                    onChange={handleInputChange}
+                    className="input-field mt-1"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="installment_amt" className="block text-sm font-medium text-gray-700">Installment Amount (₹)</label>
+                  <input
+                    type="number"
+                    name="installment_amt"
+                    id="installment_amt"
+                    value={newStudent.installment_amt}
+                    readOnly
+                    className="input-field mt-1 bg-gray-100 cursor-not-allowed"
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="fee_status" className="block text-sm font-medium text-gray-700">Fee Status</label>
+                  <select
+                    name="fee_status"
+                    id="fee_status"
+                    value={newStudent.fee_status}
+                    onChange={handleInputChange}
+                    className="input-field mt-1"
+                  >
+                    {feeStatuses.map(status => (
+                      <option key={status} value={status}>{status}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label htmlFor="enrollmentYearStart" className="block text-sm font-medium text-gray-700">Enrollment Year Start</label>
+                  <input
+                    type="number"
+                    name="enrollmentYearStart"
+                    id="enrollmentYearStart"
+                    value={enrollmentYearStart}
+                    onChange={handleEnrollmentYearStartChange}
+                    className="input-field mt-1"
+                    min={1900}
+                    max={2100}
+                    required
+                  />
+                </div>
+                <div>
+                  <label htmlFor="enrollmentYearEnd" className="block text-sm font-medium text-gray-700">Enrollment Year End</label>
+                  <input
+                    type="number"
+                    name="enrollmentYearEnd"
+                    id="enrollmentYearEnd"
+                    value={enrollmentYearEnd}
+                    onChange={handleEnrollmentYearEndChange}
+                    className="input-field mt-1"
+                    min={1900}
+                    max={2100}
+                    required
+                  />
+                </div>
+                <div>
+                  <label htmlFor="subjects_enrolled" className="block text-sm font-medium text-gray-700">Subjects Enrolled</label>
+                  <input
+                    type="text"
+                    name="subjects_enrolled"
+                    id="subjects_enrolled"
+                    value={newStudent.subjects_enrolled.join(', ')}
+                    onChange={(e) => {
+                      const subjects = e.target.value.split(',').map(s => s.trim()).filter(s => s.length > 0);
+                      setNewStudent(prev => ({ ...prev, subjects_enrolled: subjects }));
+                    }}
+                    placeholder="Enter subjects separated by commas"
+                    className="input-field mt-1"
+                  />
+                </div>
+
+
+                {newStudent.installments && newStudent.installments > 0 && (
+                  <div className="mt-4">
+                    <h3 className="text-md font-semibold mb-2">Installment Due Dates</h3>
+                    {[...Array(newStudent.installments)].map((_, index) => (
+                      <div key={index} className="mb-2">
+                        <label htmlFor={`installment_date_${index}`} className="block text-sm font-medium text-gray-700">
+                          Installment {index + 1} Due Date
+                        </label>
+                        <input
+                          type="date"
+                          id={`installment_date_${index}`}
+                          value={newStudent.installment_dates && newStudent.installment_dates[index] ? newStudent.installment_dates[index] : ''}
+                          onChange={(e) => {
+                            const newDates = newStudent.installment_dates ? [...newStudent.installment_dates] : [];
+                            newDates[index] = e.target.value;
+                            setNewStudent(prev => ({ ...prev, installment_dates: newDates }));
+                          }}
+                          className="input-field mt-1"
+                          required
+                        />
+                      </div>
+                    ))}
+                  </div>
+                )}
+                <div className="mt-6 flex justify-end space-x-4">
+                  <button className="btn-secondary" onClick={() => setShowAddModal(false)} disabled={adding}>Cancel</button>
+                  <button className="btn-primary" onClick={handleAddStudentSubmit} disabled={adding}>
+                    {adding ? 'Adding...' : 'Add Student'}
+                  </button>
+                </div>
               </div>
-              <div>
-                <label htmlFor="year" className="block text-sm font-medium text-gray-700">Year</label>
-                <input
-                  name="year"
-                  id="year"
-                  value={newStudent.year}
-                  onChange={handleInputChange}
-                  className="input-field mt-1"
-                  min={1}
-                  max={10}
-                  required
-                />
-              </div>
-              <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email</label>
-                <input
-                  type="email"
-                  name="email"
-                  id="email"
-                  value={newStudent.email}
-                  onChange={handleInputChange}
-                  className="input-field mt-1"
-                  required
-                />
-              </div>
-              <div>
-                <label htmlFor="phone" className="block text-sm font-medium text-gray-700">Phone</label>
-                <input
-                  type="tel"
-                  name="phone"
-                  id="phone"
-                  value={newStudent.phone}
-                  onChange={handleInputChange}
-                  className="input-field mt-1"
-                  required
-                />
-              </div>
-              <div>
-                <label htmlFor="enrollment_date" className="block text-sm font-medium text-gray-700">Enrollment Date</label>
-                <input
-                  type="date"
-                  name="enrollment_date"
-                  id="enrollment_date"
-                  value={newStudent.enrollment_date}
-                  onChange={handleInputChange}
-                  className="input-field mt-1"
-                  required
-                />
-              </div>
-              <div>
-                <label htmlFor="total_fee" className="block text-sm font-medium text-gray-700">Total Fee (₹)</label>
-                <input
-                  
-                  name="total_fee"
-                  id="total_fee"
-                  value={typeof newStudent.total_fee === 'number' ? newStudent.total_fee : Number(newStudent.total_fee)}
-                  onChange={handleInputChange}
-                  className="input-field mt-1"
-                  min={0}
-                />
-              </div>
-              <div>
-                <label htmlFor="installments" className="block text-sm font-medium text-gray-700">Installments (1-24)</label>
-                <input
-                  type="number"
-                  name="installments"
-                  id="installments"
-                  value={typeof newStudent.installments === 'number' ? newStudent.installments : Number(newStudent.installments)}
-                  onChange={handleInputChange}
-                  className="input-field mt-1"
-                  // min={0}
-                  // max={24}
-                />
-              </div>
-              <div>
-                <label htmlFor="installment_amt" className="block text-sm font-medium text-gray-700">Installment Amount (₹)</label>
-                <input
-                  type="number"
-                  name="installment_amt"
-                  id="installment_amt"
-                  value={newStudent.installment_amt}
-                  readOnly
-                  className="input-field mt-1 bg-gray-100 cursor-not-allowed"
-                />
-              </div>
-              <div>
-                <label htmlFor="due_date" className="block text-sm font-medium text-gray-700" aria-placeholder='1 - 31 '>Due Date (1 - 31)</label>
-                
-                <input
-                  type="due_date"
-                  name="due_date"
-                  id="due_date"
-                  value={typeof newStudent.due_date === 'number' ? newStudent.due_date : Number(newStudent.due_date)}
-                  onChange={handleInputChange}
-                  className="input-field mt-1"
-                  min={1}
-                  max={31}
-                  required
-                />
-              </div>
-              <div>
-                <label htmlFor="birthday" className="block text-sm font-medium text-gray-700">Birthday</label>
-                <input
-                  type="date"
-                  name="birthday"
-                  id="birthday"
-                  value={newStudent.birthday}
-                  onChange={handleInputChange}
-                  className="input-field mt-1"
-                />
-              </div>
-              <div>
-                <label htmlFor="fee_status" className="block text-sm font-medium text-gray-700">Fee Status</label>
-                <select
-                  name="fee_status"
-                  id="fee_status"
-                  value={newStudent.fee_status}
-                  onChange={handleInputChange}
-                  className="input-field mt-1"
-                >
-                  {feeStatuses.map(status => (
-                    <option key={status} value={status}>{status}</option>
-                  ))}
-                </select>
-              </div>
-            </div>
-            <div className="mt-6 flex justify-end space-x-4">
-              <button className="btn-secondary" onClick={() => setShowAddModal(false)} disabled={adding}>Cancel</button>
-              <button className="btn-primary" onClick={handleAddStudentSubmit} disabled={adding}>
-                {adding ? 'Adding...' : 'Add Student'}
-              </button>
             </div>
           </div>
-        </div>
-      )}
+
+        )};
+
 
       {/* Fee Update Modal */}
       {showFeeModal && (
@@ -851,7 +978,6 @@ const Students: React.FC = () => {
         </div>
       )}
     </div>
-  );
+  )
 };
-
 export default Students;

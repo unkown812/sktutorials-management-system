@@ -4,43 +4,61 @@ import supabase from '../../lib/supabase';
 interface Student {
   id?: number;
   name: string;
-  due_date: number;
+  installment_dates?: string[];
 }
 
 const DueDateReminder: React.FC = () => {
-  const [dueTodayStudents, setDueTodayStudents] = useState<Student[]>([]);
+  const [dueTodayStudents, setDueTodayStudents] = useState<{student: Student, dueDates: string[]}[]>([]);
   const [showReminder, setShowReminder] = useState(true);
 
   useEffect(() => {
     const fetchStudentsWithDueToday = async () => {
       try {
-        const today = new Date().getDate();
+        const todayDate = new Date();
+        const todayStr = todayDate.toISOString().split('T')[0]; // yyyy-mm-dd
+
         const { data, error } = await supabase
           .from('students')
-          .select('id, name, due_date')
-          .eq('due_date', today);
+          .select('id, name, installment_dates');
 
         if (error) {
-          console.error('Error fetching students with due date today:', error);
+          console.error('Error fetching students:', error);
           return;
         }
 
         if (data && data.length > 0) {
-          setDueTodayStudents(data);
-          setShowReminder(true);
-          // Show browser notification
-          if (Notification.permission === 'granted') {
-            new Notification('Fee Payment Reminder', {
-              body: `You have ${data.length} student(s) with fee due today.`,
-            });
-          } else if (Notification.permission !== 'denied') {
-            Notification.requestPermission().then(permission => {
-              if (permission === 'granted') {
-                new Notification('Fee Payment Reminder', {
-                  body: `You have ${data.length} student(s) with fee due today.`,
-                });
+          // Filter students who have installment_dates containing todayStr
+          const studentsDueToday = data
+            .map((student: Student) => {
+              const dueDatesToday = (student.installment_dates || []).filter(dateStr => dateStr === todayStr);
+              if (dueDatesToday.length > 0) {
+                return { student, dueDates: dueDatesToday };
               }
-            });
+              return null;
+            })
+            .filter((item): item is {student: Student, dueDates: string[]} => item !== null);
+
+          if (studentsDueToday.length > 0) {
+            setDueTodayStudents(studentsDueToday);
+            setShowReminder(true);
+
+            // Show browser notification
+            if (Notification.permission === 'granted') {
+              new Notification('Installment Due Date Reminder', {
+                body: `You have ${studentsDueToday.length} student(s) with installment due today.`,
+              });
+            } else if (Notification.permission !== 'denied') {
+              Notification.requestPermission().then(permission => {
+                if (permission === 'granted') {
+                  new Notification('Installment Due Date Reminder', {
+                    body: `You have ${studentsDueToday.length} student(s) with installment due today.`,
+                  });
+                }
+              });
+            }
+          } else {
+            setDueTodayStudents([]);
+            setShowReminder(false);
           }
         } else {
           setDueTodayStudents([]);
@@ -60,11 +78,13 @@ const DueDateReminder: React.FC = () => {
 
   return (
     <div className="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded relative mb-4" role="alert">
-      <strong className="font-bold">Fee Payment Reminder!</strong>
-      <span className="block sm:inline"> The following students have fee due today (day {new Date().getDate()}):</span>
+      <strong className="font-bold">Installment Due Date Reminder!</strong>
+      <span className="block sm:inline"> The following students have installment(s) due today ({new Date().toISOString().split('T')[0]}):</span>
       <ul className="list-disc list-inside mt-2">
-        {dueTodayStudents.map(student => (
-          <li key={student.id}>{student.name}</li>
+        {dueTodayStudents.map(({student, dueDates}) => (
+          <li key={student.id}>
+            {student.name} - Due Date(s): {dueDates.join(', ')}
+          </li>
         ))}
       </ul>
       <button
