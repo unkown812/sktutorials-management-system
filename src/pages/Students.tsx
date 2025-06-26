@@ -21,14 +21,16 @@ interface Student {
   email: string;
   phone: string;
   enrollment_date: string;
+  created_at: string;
   fee_status: string;
   total_fee: number | null;
   paid_fee: number | null;
   due_amount: number | null;
+  last_payment:string;
   birthday: string;
-  installment_amt: number | null;
+  installment_amt: number[];
   installments: number | null;
-  installment_dates?: string[]; // Added installment_dates as optional string array
+  installment_dates?: string[]; 
   enrollment_year: number[];
   subjects_enrolled: string[];
 }
@@ -48,6 +50,7 @@ const Students: React.FC = () => {
   const [studentCourses, setStudentCourses] = useState<string[]>([]);
   const [showAddModal, setShowAddModal] = useState(false);
   const [showFeeModal, setShowFeeModal] = useState(false);
+  // Removed unused state variables installmentAmt and setInstallmentAmt
   const [newStudent, setNewStudent] = useState<Student>({
     id: 0,
     name: '',
@@ -58,17 +61,73 @@ const Students: React.FC = () => {
     email: '',
     phone: '',
     enrollment_date: new Date().toISOString().split('T')[0],
+    created_at: new Date().toISOString().split('T')[0],
     fee_status: '',
     total_fee: null,
     paid_fee: null,
     due_amount: null,
+    last_payment:new Date().toISOString().split('T')[0],
     birthday: '',
-    installment_amt: null,
+    installment_amt: [],
     installments: null,
-    installment_dates: [], // initialize as empty array
+    installment_dates: [],
     enrollment_year: [],
     subjects_enrolled: [],
   });
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+
+    if (name === 'total_fee') {
+      const totalFeeNum = Number(value);
+      let installmentsNum = newStudent.installments ?? 1;
+      if (installmentsNum < 1) installmentsNum = 1;
+      if (installmentsNum > 24) installmentsNum = 24;
+      setNewStudent((prev) => ({
+        ...prev,
+        total_fee: totalFeeNum,
+        installment_amt: Array(installmentsNum).fill(totalFeeNum / installmentsNum),
+      }));
+    } else if (name === 'installments') {
+      let installmentsNum = Number(value);
+      if (installmentsNum < 1) installmentsNum = 1;
+      if (installmentsNum > 24) installmentsNum = 24;
+      let newInstallmentDates = Array.isArray(newStudent.installment_dates) ? [...newStudent.installment_dates] : [];
+      if (newInstallmentDates.length > installmentsNum) {
+        newInstallmentDates = newInstallmentDates.slice(0, installmentsNum);
+      } else {
+        while (newInstallmentDates.length < installmentsNum) {
+          newInstallmentDates.push('');
+        }
+      }
+      setNewStudent((prev) => ({
+        ...prev,
+        installments: installmentsNum,
+        installment_amt: Array(installmentsNum).fill((newStudent.total_fee || 0) / installmentsNum),
+        installment_dates: newInstallmentDates,
+      }));
+    } else if (name === 'year') {
+      setNewStudent((prev) => ({
+        ...prev,
+        year: Number(value),
+      }));
+    } else if (name === 'semester') {
+      setNewStudent((prev) => ({
+        ...prev,
+        semester: Number(value),
+      }));
+    } else if (name === 'due_date') {
+      setNewStudent((prev) => ({
+        ...prev,
+        due_date: Number(value),
+      }));
+    } else {
+      setNewStudent((prev) => ({
+        ...prev,
+        [name]: name === 'paid_fee' || name === 'due_date' ? Number(value) : value,
+      }));
+    }
+  };
 
   // Additional state for enrollment year start and end inputs
   const [enrollmentYearStart, setEnrollmentYearStart] = useState<number | ''>('');
@@ -78,11 +137,11 @@ const Students: React.FC = () => {
   const [feeAmount, setFeeAmount] = useState<number | null>(null);
 
   // Function to handle row click and navigate to student detail page
-  const handleRowClick = (studentId?: number) => {
-    if (studentId) {
-      navigate(`/students/${studentId}`);
-    }
-  };
+  // const handleRowClick = (studentId?: number) => {
+  //   if (studentId) {
+  //     navigate(`/students/${studentId}`);
+  //   }
+  // };
 
   const exportToCSV = () => {
     if (filteredStudents.length === 0) {
@@ -91,23 +150,28 @@ const Students: React.FC = () => {
     }
 
     const headers = [
-      'ID',
-      'Name',
-      'Category',
-      'Course',
-      'Year',
-      'Email',
-      'Phone',
-      'Enrollment Date',
-      'Fee Status',
-      'Total Fee',
-      'Paid Fee',
-      'Remaining Fee',
-      'Due Date',
-      'Installment Amount',
-      'Installments',
-      'Enrollment Year',
-      'Birthday'
+      'id',
+      'name',
+      'email',
+      'phone',
+      'category',
+      'course',
+      'enrollment_date',
+      'created_at',
+      'fee_status',
+      'paid_fee',
+      'total_fee',
+      'due_amount',
+      'last_payment',
+      'year',
+      'birthday',
+      'installment_amt',
+      'installments',
+      'enrollment_year-start',
+      'enrollment_year-end',
+      'semester',
+      'subjects_enrolled',
+      'installment_dates'
     ];
 
     const csvRows = [
@@ -115,17 +179,28 @@ const Students: React.FC = () => {
       ...filteredStudents.map((student) => {
         const row = [
           student.id ?? '',
-          `"${student.name.replace(/"/g, '""')}"`,
-          `"${student.category.replace(/"/g, '""')}"`,
-          `"${student.course.replace(/"/g, '""')}"`,
-          `"${student.email.replace(/"/g, '""')}"`,
-          `"${student.phone.replace(/"/g, '""')}"`,
+          // `"${student.name.replace(/"/g, '""')}"`,
+          // `"${student.email.replace(/"/g, '""')}"`,
+          student.name,
+          student.email,
+          student.phone,
+          student.category,
+          student.course,
           student.enrollment_date,
+          student.created_at,
           student.fee_status,
-          student.total_fee,
-          student.due_amount,
           student.paid_fee,
-          (student.total_fee || 0) - (student.paid_fee || 0),
+          student.total_fee,
+          (student.total_fee || 0) - (student.paid_fee || 0),//due
+          student.last_payment,
+          student.year,
+          student.birthday,
+          student.installment_amt,
+          student.installments,
+          student.enrollment_year,
+          student.semester,
+          student.subjects_enrolled,
+          student.installment_dates,
         ];
         return row.join(',');
       }),
@@ -236,11 +311,13 @@ const Students: React.FC = () => {
       email: '',
       phone: '',
       enrollment_date: new Date().toISOString().split('T')[0],
+      created_at: new Date().toISOString().split('T')[0],
       fee_status: 'Unpaid',
       total_fee: null,
       paid_fee: null,
       due_amount: null,
-      installment_amt: null,
+      last_payment: new Date().toISOString().split('T')[0],
+      installment_amt:[],
       installments: null,
       birthday: new Date().toISOString().split('T')[0],
       enrollment_year: [],
@@ -250,61 +327,61 @@ const Students: React.FC = () => {
     setStudentCourses(schoolCourses);
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
+  // const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  //   const { name, value } = e.target;
 
-    if (name === 'total_fee') {
-      const totalFeeNum = Number(value);
-      let installmentsNum = newStudent.installments ?? 1;
-      if (installmentsNum < 1) installmentsNum = 1;
-      if (installmentsNum > 24) installmentsNum = 24;
-      const installmentAmt = installmentsNum > 0 ? totalFeeNum / installmentsNum : 0;
-      setNewStudent((prev) => ({
-        ...prev,
-        total_fee: totalFeeNum,
-        installment_amt: installmentAmt,
-      }));
-    } else if (name === 'installments') {
-      let installmentsNum = Number(value);
-      if (installmentsNum < 1) installmentsNum = 1;
-      if (installmentsNum > 24) installmentsNum = 24;
-      const installmentAmt = installmentsNum > 0 ? (newStudent.total_fee || 0) / installmentsNum : 0
-      let newInstallmentDates = newStudent.installment_dates ? [...newStudent.installment_dates] : [];
-      if (newInstallmentDates.length > installmentsNum) {
-        newInstallmentDates = newInstallmentDates.slice(0, installmentsNum);
-      } else {
-        while (newInstallmentDates.length < installmentsNum) {
-          newInstallmentDates.push('');
-        }
-      }
-      setNewStudent((prev) => ({
-        ...prev,
-        installments: installmentsNum,
-        installment_amt: installmentAmt,
-        installment_dates: newInstallmentDates,
-      }));
-    } else if (name === 'year') {
-      setNewStudent((prev) => ({
-        ...prev,
-        year: Number(value),
-      }));
-    } else if (name === 'semester') {
-      setNewStudent((prev) => ({
-        ...prev,
-        semester: Number(value),
-      }));
-    } else if (name === 'due_date') {
-      setNewStudent((prev) => ({
-        ...prev,
-        due_date: Number(value),
-      }));
-    } else {
-      setNewStudent((prev) => ({
-        ...prev,
-        [name]: name === 'paid_fee' || name === 'due_date' ? Number(value) : value,
-      }));
-    }
-  };
+  //   if (name === 'total_fee') {
+  //     const totalFeeNum = Number(value);
+  //     let installmentsNum = newStudent.installments ?? 1;
+  //     if (installmentsNum < 1) installmentsNum = 1;
+  //     if (installmentsNum > 24) installmentsNum = 24;
+  //     const installmentAmt = installmentsNum > 0 ? totalFeeNum / installmentsNum : 0;
+  //     setNewStudent((prev) => ({
+  //       ...prev,
+  //       total_fee: totalFeeNum,
+  //       installment_amt: installmentAmt,
+  //     }));
+  //   } else if (name === 'installments') {
+  //     let installmentsNum = Number(value);
+  //     if (installmentsNum < 1) installmentsNum = 1;
+  //     if (installmentsNum > 24) installmentsNum = 24;
+  //     const installmentAmt = installmentsNum > 0 ? (newStudent.total_fee || 0) / installmentsNum : 0
+  //     let newInstallmentDates = newStudent.installment_dates ? [...newStudent.installment_dates] : [];
+  //     if (newInstallmentDates.length > installmentsNum) {
+  //       newInstallmentDates = newInstallmentDates.slice(0, installmentsNum);
+  //     } else {
+  //       while (newInstallmentDates.length < installmentsNum) {
+  //         newInstallmentDates.push('');
+  //       }
+  //     }
+  //     setNewStudent((prev) => ({
+  //       ...prev,
+  //       installments: installmentsNum,
+  //       // installment_amt: installmentAmt,
+  //       installment_dates: newInstallmentDates,
+  //     }));
+  //   } else if (name === 'year') {
+  //     setNewStudent((prev) => ({
+  //       ...prev,
+  //       year: Number(value),
+  //     }));
+  //   } else if (name === 'semester') {
+  //     setNewStudent((prev) => ({
+  //       ...prev,
+  //       semester: Number(value),
+  //     }));
+  //   } else if (name === 'due_date') {
+  //     setNewStudent((prev) => ({
+  //       ...prev,
+  //       due_date: Number(value),
+  //     }));
+  //   } else {
+  //     setNewStudent((prev) => ({
+  //       ...prev,
+  //       [name]: name === 'paid_fee' || name === 'due_date' ? Number(value) : value,
+  //     }));
+  //   }
+  // };
 
   // New handlers for enrollment year start and end inputs
   const handleEnrollmentYearStartChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -659,7 +736,7 @@ const Students: React.FC = () => {
                   })
                 })
               })
-              return rows;
+              return rows
             })()}
           </tbody>
         </table>
@@ -672,7 +749,6 @@ const Students: React.FC = () => {
           <span className="font-medium text-primary">{filteredStudents.length}</span> students
         </div>
       </div>
-
 
       {showAddModal &&
         (
@@ -822,17 +898,40 @@ const Students: React.FC = () => {
                     className="input-field mt-1"
                   />
                 </div>
-                <div>
-                  <label htmlFor="installment_amt" className="block text-sm font-medium text-gray-700">Installment Amount (₹)</label>
-                  <input
-                    type="number"
-                    name="installment_amt"
-                    id="installment_amt"
-                    value={newStudent.installment_amt}
-                    readOnly
-                    className="input-field mt-1 bg-gray-100 cursor-not-allowed"
-                  />
-                </div>
+                {/* <div>
+                  <label className="block text-sm font-medium text-gray-700">Installment Amounts (₹)</label>
+                  {newStudent.installment_amt && newStudent.installment_amt.length > 0 ? (
+                    newStudent.installment_amt.map((amt, index) => (
+                      <input
+                        key={index}
+                        type="number"
+                        name={`installment_amt_${index}`}
+                        id={`installment_amt_${index}`}
+                        value={amt ?? ''}
+                        min={0}
+                        aria-label={`Installment amount ${index + 1}`}
+                        onChange={(e) => {
+                          const value = Number(e.target.value);
+                          setNewStudent(prev => {
+                            const newInstallmentAmt = [...(prev.installment_amt || [])];
+                            newInstallmentAmt[index] = value;
+                            return { ...prev, installment_amt: newInstallmentAmt };
+                          });
+                        }}
+                        className="input-field mt-1 mb-1"
+                      />
+                    ))
+                  ) : (
+                    <input
+                      type="number"
+                      name="installment_amt"
+                      id="installment_amt"
+                      value={0}
+                      readOnly
+                      className="input-field mt-1 bg-gray-100 cursor-not-allowed"
+                    />
+                  )}
+                </div> */}
 
                 <div>
                   <label htmlFor="fee_status" className="block text-sm font-medium text-gray-700">Fee Status</label>
