@@ -430,9 +430,9 @@ const Students: React.FC = () => {
         // installments: installmentsNum,
         // installment_amt: installmentAmtNum,
         due_amount: dueAmountNum,
-        enrollment_year: [enrollmentYearStart, enrollmentYearEnd],
+        // enrollment_year: [enrollmentYearStart, enrollmentYearEnd],
         // installment_dates: newStudent.installment_dates,
-        semester: newStudent.semester,
+        // semester: newStudent.semester,
       };
 
       const { error } = await supabase.from('students').insert([studentToInsert]);
