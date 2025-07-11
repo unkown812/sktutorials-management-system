@@ -16,8 +16,8 @@ interface Student {
   name: string;
   category: string;
   course: string;
-  year: number | null;
-  semester: number | null;
+  year: number ;
+  semester: number ;
   email: string;
   phone: string;
   enrollment_date: string;
@@ -44,20 +44,19 @@ const Students: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [selectedCourse, setSelectedCourse] = useState('All');
   const [selectedYear, setSelectedYear] = useState(0);
-  const [yearOptionsJuniorCollege] = useState<number[]>([1, 2]);
+  const [yearOptionsJuniorCollege] = useState<number[]>([11, 12]);
   const [yearOptionsDiploma] = useState<number[]>([1, 2, 3]);
   const [yearOptionsSchool] = useState<number[]>([5, 6, 7, 8, 9, 10]);
   const [studentCourses, setStudentCourses] = useState<string[]>([]);
   const [showAddModal, setShowAddModal] = useState(false);
   const [showFeeModal, setShowFeeModal] = useState(false);
-  // Removed unused state variables installmentAmt and setInstallmentAmt
   const [newStudent, setNewStudent] = useState<Student>({
     id: 0,
     name: '',
     category: '',
     course: '',
-    year: null,
-    semester: null,
+    year: 0,
+    semester: 0,
     email: '',
     phone: '',
     enrollment_date: new Date().toISOString().split('T')[0],
@@ -639,7 +638,7 @@ const Students: React.FC = () => {
               <th className="px-4 py-2 text-left text-sm font-medium text-gray-600">Total Fee</th>
               <th className="px-4 py-2 text-left text-sm font-medium text-gray-600">Amount Paid</th>
               <th className="px-4 py-2 text-left text-sm font-medium text-gray-600">Due</th>
-              <th className="px-4 py-2 text-left text-sm font-medium text-gray-600">Installment Amount</th>
+              //<th className="px-4 py-2 text-left text-sm font-medium text-gray-600">Installment Amount</th>
               <th className="px-4 py-2 text-left text-sm font-medium text-gray-600">Installments</th>
               <th className="px-4 py-2 text-left text-sm font-medium text-gray-600">Actions</th>
             </tr>
@@ -1077,6 +1076,6 @@ const Students: React.FC = () => {
         </div>
       )}
     </div>
-  )
+  );
 };
 export default Students;
