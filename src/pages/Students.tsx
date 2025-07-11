@@ -16,8 +16,8 @@ interface Student {
   name: string;
   category: string;
   course: string;
-  year: number ;
-  semester: number ;
+  year: number | null;
+  semester: number | null;
   email: string;
   phone: string;
   enrollment_date: string;
@@ -44,19 +44,20 @@ const Students: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [selectedCourse, setSelectedCourse] = useState('All');
   const [selectedYear, setSelectedYear] = useState(0);
-  const [yearOptionsJuniorCollege] = useState<number[]>([11, 12]);
+  const [yearOptionsJuniorCollege] = useState<number[]>([1, 2]);
   const [yearOptionsDiploma] = useState<number[]>([1, 2, 3]);
   const [yearOptionsSchool] = useState<number[]>([5, 6, 7, 8, 9, 10]);
   const [studentCourses, setStudentCourses] = useState<string[]>([]);
   const [showAddModal, setShowAddModal] = useState(false);
   const [showFeeModal, setShowFeeModal] = useState(false);
+  // Removed unused state variables installmentAmt and setInstallmentAmt
   const [newStudent, setNewStudent] = useState<Student>({
     id: 0,
     name: '',
     category: '',
     course: '',
-    year: 0,
-    semester: 0,
+    year: null,
+    semester: null,
     email: '',
     phone: '',
     enrollment_date: new Date().toISOString().split('T')[0],
@@ -103,7 +104,7 @@ const Students: React.FC = () => {
         ...prev,
         installments: installmentsNum,
         installment_amt: Array(installmentsNum).fill((newStudent.total_fee || 0) / installmentsNum),
-        installment_dates: newInstallmentDates,
+        // installment_dates: newInstallmentDates,
       }));
     } else if (name === 'year') {
       setNewStudent((prev) => ({
@@ -128,19 +129,17 @@ const Students: React.FC = () => {
     }
   };
 
-  // Additional state for enrollment year start and end inputs
   const [enrollmentYearStart, setEnrollmentYearStart] = useState<number | ''>('');
   const [enrollmentYearEnd, setEnrollmentYearEnd] = useState<number | ''>('');
   const [adding, setAdding] = useState(false);
   const [addError, setAddError] = useState<string | null>(null);
   const [feeAmount, setFeeAmount] = useState<number | null>(null);
 
-  // Function to handle row click and navigate to student detail page
-  // const handleRowClick = (studentId?: number) => {
-  //   if (studentId) {
-  //     navigate(`/students/${studentId}`);
-  //   }
-  // };
+  const handleRowClick = (studentId?: number) => {
+    if (studentId) {
+      navigate(`/students/${studentId}`);
+    }
+  };
 
   const exportToCSV = () => {
     if (filteredStudents.length === 0) {
@@ -174,12 +173,10 @@ const Students: React.FC = () => {
     ];
 
     const csvRows = [
-      headers.join(','), // header row first
+      headers.join(','), 
       ...filteredStudents.map((student) => {
         const row = [
           student.id ?? '',
-          // `"${student.name.replace(/"/g, '""')}"`,
-          // `"${student.email.replace(/"/g, '""')}"`,
           student.name,
           student.email,
           student.phone,
@@ -190,7 +187,7 @@ const Students: React.FC = () => {
           student.fee_status,
           student.paid_fee,
           student.total_fee,
-          (student.total_fee || 0) - (student.paid_fee || 0),//due
+          (student.total_fee || 0) - (student.paid_fee || 0),
           student.last_payment,
           student.year,
           student.birthday,
@@ -228,7 +225,6 @@ const Students: React.FC = () => {
     if (error) {
       setError(error.message);
     } else {
-      // Calculate due_amount as total_fee - paid_fee for each student
       const studentsWithDue = (data || []).map(student => ({
         ...student,
         due_amount: (student.total_fee || 0) - (student.paid_fee || 0),
@@ -255,7 +251,6 @@ const Students: React.FC = () => {
   const juniorCollegeCourses = ['Science', 'Commerce', 'Arts'];
   const diplomaCourses = ['Computer Science', 'Mechanical', 'Electrical', 'Civil', 'Other'];
   const entranceExamCourses = ['NEET', 'JEE', 'MHTCET', 'Boards'];
-  // Removed unused variable juniorCollegeSubjects to fix eslint warning
 
   useEffect(() => {
     switch (selectedCategory) {
@@ -382,7 +377,6 @@ const Students: React.FC = () => {
   //   }
   // };
 
-  // New handlers for enrollment year start and end inputs
   const handleEnrollmentYearStartChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value === '' ? '' : Number(e.target.value);
     setEnrollmentYearStart(val);
@@ -402,8 +396,6 @@ const Students: React.FC = () => {
         setAdding(false);
         return;
       }
-
-      // Validate enrollment year inputs
       if (enrollmentYearStart === '' || enrollmentYearEnd === '') {
         setAddError('Please enter both enrollment start and end years.');
         setAdding(false);
@@ -414,14 +406,11 @@ const Students: React.FC = () => {
         setAdding(false);
         return;
       }
-
-      // Validate installment_dates length matches installments count
       if (!newStudent.installment_dates || newStudent.installment_dates.length !== (newStudent.installments || 0)) {
         setAddError('Please enter due dates for all installments.');
         setAdding(false);
         return;
       }
-      // Validate all installment_dates are non-empty and valid dates
       for (const dateStr of newStudent.installment_dates) {
         if (!dateStr || isNaN(Date.parse(dateStr))) {
           setAddError('Please enter valid due dates for all installments.');
@@ -438,11 +427,11 @@ const Students: React.FC = () => {
       const studentToInsert = {
         ...newStudent,
         total_fee: totalFeeNum,
-        installments: installmentsNum,
-        // installment_amt: Array(installmentsNum).fill(installmentAmtNum),
+        // installments: installmentsNum,
+        // installment_amt: installmentAmtNum,
         due_amount: dueAmountNum,
         enrollment_year: [enrollmentYearStart, enrollmentYearEnd],
-        // installment_dates: newStudent.installment_dates[],
+        // installment_dates: newStudent.installment_dates,
         semester: newStudent.semester,
       };
 
@@ -463,7 +452,6 @@ const Students: React.FC = () => {
     setAdding(false);
   };
 
-  // Open fee update modal
   const handleOpenFeeModal = (student: Student) => {
     setNewStudent(student);
     setFeeAmount(null);
@@ -508,7 +496,6 @@ const Students: React.FC = () => {
     setAdding(false);
   };
 
-  // Calculate remaining fee
   const getRemainingFee = (student: Student) => {
     return (student.total_fee || 0) - (student.paid_fee || 0);
   };
@@ -528,9 +515,7 @@ const Students: React.FC = () => {
         </div>
       </div>
 
-      {/* Filters */}
       <div className="flex flex-col space-y-4 md:flex-row md:space-y-0 md:space-x-4 mt-5 mb-5">
-        {/* Search Input */}
         <div className="relative flex-grow flex items-center">
           <Search className="h-5 w-5 text-gray-400 absolute left-3 pointer-events-none" />
           <input
@@ -637,8 +622,7 @@ const Students: React.FC = () => {
               <th className="px-4 py-2 text-left text-sm font-medium text-gray-600">Fee Status</th>
               <th className="px-4 py-2 text-left text-sm font-medium text-gray-600">Total Fee</th>
               <th className="px-4 py-2 text-left text-sm font-medium text-gray-600">Amount Paid</th>
-              <th className="px-4 py-2 text-left text-sm font-medium text-gray-600">Due</th>
-              //<th className="px-4 py-2 text-left text-sm font-medium text-gray-600">Installment Amount</th>
+              <th className="px-4 py-2 text-left text-sm font-medium text-gray-600">Due</th>  
               <th className="px-4 py-2 text-left text-sm font-medium text-gray-600">Installments</th>
               <th className="px-4 py-2 text-left text-sm font-medium text-gray-600">Actions</th>
             </tr>
@@ -656,21 +640,7 @@ const Students: React.FC = () => {
 
               const rows: JSX.Element[] = [];
               Object.keys(grouped).forEach(category => {
-                // rows.push(
-                //   <tr key={`category-${category}`} className="bg-white">
-                //     <td colSpan={8} className="px-4 py-2 font-bold text-lg text-gray-700 text-center">
-                //       Category: {category}
-                //     </td>
-                //   </tr>
-                // );
                 Object.keys(grouped[category]).forEach(course => {
-                  // rows.push(
-                  //   <tr key={`course-${category}-${course}`} className="bg-white">
-                  //     <td colSpan={8} className="px-6 py-1 font-semibold text-md text-gray-600 text-center">
-                  //       Course: {course}
-                  //     </td>
-                  //   </tr>
-                  // );
                   Object.keys(grouped[category][course]).sort((a, b) => Number(a) - Number(b)).forEach(yearStr => {
                     const year = Number(yearStr);
                     rows.push(
@@ -710,9 +680,6 @@ const Students: React.FC = () => {
                             <span className="px-2 py-1 text-x text-red-600">{student.due_amount}</span>
                           </td>
                           <td className="px-4 py-2">
-                            <span className="px-2 py-1 text-x text-purple-800">{student.installment_amt}</span>
-                          </td>
-                          <td className="px-4 py-2">
                             <span className="px-2 py-1 text-x text-purple-800">{student.installments}</span>
                           </td>
                           <td className="px-1 py-1">
@@ -735,7 +702,7 @@ const Students: React.FC = () => {
                   })
                 })
               })
-              return rows
+              return rows;
             })()}
           </tbody>
         </table>
@@ -991,7 +958,7 @@ const Students: React.FC = () => {
                 </div> */}
 
 
-                {/* {newStudent.installments && newStudent.installments > 0 && (
+                {newStudent.installments && newStudent.installments > 0 && (
                   <div className="mt-4">
                     <h3 className="text-md font-semibold mb-2">Installment Due Dates</h3>
                     {[...Array(newStudent.installments)].map((_, index) => (
@@ -1014,7 +981,7 @@ const Students: React.FC = () => {
                       </div>
                     ))}
                   </div>
-                )} */}
+                )}
                 <div className="mt-6 flex justify-end space-x-4">
                   <button className="btn-secondary" onClick={() => setShowAddModal(false)} disabled={adding}>Cancel</button>
                   <button className="btn-primary" onClick={handleAddStudentSubmit} disabled={adding}>
@@ -1076,6 +1043,6 @@ const Students: React.FC = () => {
         </div>
       )}
     </div>
-  );
+  )
 };
 export default Students;
