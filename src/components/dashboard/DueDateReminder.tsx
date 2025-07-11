@@ -15,7 +15,7 @@ const DueDateReminder: React.FC = () => {
     const fetchStudentsWithDueToday = async () => {
       try {
         const todayDate = new Date();
-        const todayStr = todayDate.toISOString().split('T')[0]; // yyyy-mm-dd
+        const todayStr = todayDate.toISOString().split('T')[0]; 
 
         const { data, error } = await supabase
           .from('students')
@@ -27,7 +27,6 @@ const DueDateReminder: React.FC = () => {
         }
 
         if (data && data.length > 0) {
-          // Filter students who have installment_dates containing todayStr
           const studentsDueToday = data
             .map((student: Student) => {
               const dueDatesToday = (student.installment_dates || []).filter(dateStr => dateStr === todayStr);

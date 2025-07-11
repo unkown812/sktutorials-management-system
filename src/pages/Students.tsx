@@ -439,10 +439,10 @@ const Students: React.FC = () => {
         ...newStudent,
         total_fee: totalFeeNum,
         installments: installmentsNum,
-        installment_amt: installmentAmtNum,
+        // installment_amt: Array(installmentsNum).fill(installmentAmtNum),
         due_amount: dueAmountNum,
         enrollment_year: [enrollmentYearStart, enrollmentYearEnd],
-        installment_dates: newStudent.installment_dates,
+        // installment_dates: newStudent.installment_dates[],
         semester: newStudent.semester,
       };
 
@@ -974,7 +974,7 @@ const Students: React.FC = () => {
                     required
                   />
                 </div>
-                <div>
+                {/* <div>
                   <label htmlFor="subjects_enrolled" className="block text-sm font-medium text-gray-700">Subjects Enrolled</label>
                   <input
                     type="text"
@@ -988,10 +988,10 @@ const Students: React.FC = () => {
                     placeholder="Enter subjects separated by commas"
                     className="input-field mt-1"
                   />
-                </div>
+                </div> */}
 
 
-                {newStudent.installments && newStudent.installments > 0 && (
+                {/* {newStudent.installments && newStudent.installments > 0 && (
                   <div className="mt-4">
                     <h3 className="text-md font-semibold mb-2">Installment Due Dates</h3>
                     {[...Array(newStudent.installments)].map((_, index) => (
@@ -1014,7 +1014,7 @@ const Students: React.FC = () => {
                       </div>
                     ))}
                   </div>
-                )}
+                )} */}
                 <div className="mt-6 flex justify-end space-x-4">
                   <button className="btn-secondary" onClick={() => setShowAddModal(false)} disabled={adding}>Cancel</button>
                   <button className="btn-primary" onClick={handleAddStudentSubmit} disabled={adding}>
